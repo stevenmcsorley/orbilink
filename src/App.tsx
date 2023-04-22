@@ -1,26 +1,50 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import EarthVisualization from './EarthVisualization';
+import SatellitesList from './SatellitesList';
 
-function App() {
+export type SatelliteData = {
+  name: string;
+  tle1: string;
+  tle2: string;
+};
+
+const App: React.FC = () => {
+  const [satellites, setSatellites] = useState<SatelliteData[]>([]);
+
+  useEffect(() => {
+    const fetchSatellites = async () => {
+      try {
+        const response = await axios.get(
+          'https://www.celestrak.com/NORAD/elements/stations.txt'
+        );
+        const rawData = response.data.split('\n');
+        const parsedSatellites: SatelliteData[] = [];
+
+        for (let i = 0; i < rawData.length - 2; i += 3) {
+          parsedSatellites.push({
+            name: rawData[i].trim(),
+            tle1: rawData[i + 1].trim(),
+            tle2: rawData[i + 2].trim(),
+          });
+        }
+
+        setSatellites(parsedSatellites);
+      } catch (error) {
+        console.error('Error fetching satellite data:', error);
+      }
+    };
+
+    fetchSatellites();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>OrbiLink 3D Earth Visualization</h1>
+      <EarthVisualization width={800} height={600} satellites={satellites} />
+      <SatellitesList satellites={satellites} />
     </div>
   );
-}
+};
 
 export default App;
