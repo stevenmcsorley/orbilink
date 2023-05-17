@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import SatelliteList from './SatellitesList';
 import SatelliteMap from './SatelliteMap';
 import { getSatellitePosition } from './services/getSatellitePosition';
+import CelestrakAPI from './api/CelestrakAPI';
 
 type SatelliteData = {
   name: string;
@@ -19,26 +19,13 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchSatellites = async () => {
       try {
-        const response = await axios.get(
-          'https://celestrak.org/NORAD/elements/gp.php?GROUP=sarsat&FORMAT=tle'
-        );
-        const rawData = response.data.split('\n');
-        const parsedSatellites: SatelliteData[] = [];
-
-        for (let i = 0; i < rawData.length - 2; i += 3) {
-          parsedSatellites.push({
-            name: rawData[i].trim(),
-            tle1: rawData[i + 1].trim(),
-            tle2: rawData[i + 2].trim(),
-          });
-        }
-
-        setSatellites(parsedSatellites);
+        const satellites = await CelestrakAPI.getDisasterMonitoringSatellites();
+        setSatellites(satellites);
       } catch (error) {
         console.error('Error fetching satellite data:', error);
       }
     };
-
+  
     fetchSatellites();
   }, []);
 
